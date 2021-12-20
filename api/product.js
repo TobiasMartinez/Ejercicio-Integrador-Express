@@ -4,16 +4,19 @@ const user = require('../middleware/usuario');
 const auth = require('../middleware/auth');
 
 let products = require("../../4-clase/products");
+const authProduct = require("../middleware/authProduct");
 
 router.use(express.json());
 
 //1. Retornar todos los productos del array. “/products”
 
 router.get("/products",user, auth, (req, res) => {
-    res.status(200).json({
+    try{res.status(200).json({
         products,
         message: "Productos en stock"
-    });
+    })}catch(error){
+        res.send('Error 500');
+    }
 })
 
 // 2. Obtener un producto específico mediante su ID “/product/:id”
@@ -30,14 +33,13 @@ router.get("/product/:id", (req, res) => {
 
 // 3. Agregar un nuevo producto “/product”
 
-router.post("/product", (req, res) => {
+router.post("/product", authProduct, (req, res) => {
     let productToAdd = req.body;
-    // product = json.pop({"id": obtenerUltimoId(products) + 1});
-    let productWithId = { id: obtenerUltimoId(products) + 1, ...productToAdd };
+    let productWithId = { id: products.length +1, ...productToAdd };
     products.push(productWithId);
 
     res.status(200).json({
-        products,
+        productWithId,
         message: "El producto fue agregado correctamente"
     })
 });
@@ -101,12 +103,6 @@ router.delete("products/:name", (req, res) => {
     }
 })
 
-// FUNCION PARA EL ULTIMO ID 
-const obtenerUltimoId = products => {
-    let ultimoObjeto = products[(products.length - 1)];
-    
-    return ultimoObjeto.id;
-};
 
 // FUNCION PARA PASAR NUMERO A FORMATO USD.
 const formatter = new Intl.NumberFormat('en-US', {
